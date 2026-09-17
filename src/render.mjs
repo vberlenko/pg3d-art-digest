@@ -139,7 +139,7 @@ export function renderHtml(snap, page = null, index = 0, total = 1) {
   const sections = all ? snap.sections : snap.sections.filter((s) => page.sections.includes(s.id));
   const showHero = all || page.hero;
   const showCapacity = all || page.capacity;
-  const showFootnote = all || page.footnote;
+  const showFootnote = page ? !!page.footnote : false; // off by default; enable per page with "footnote": true
   const badge = total > 1 ? `${snap.badge} · ${index + 1}/${total}` : snap.badge;
 
   return `<!DOCTYPE html>
