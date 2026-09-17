@@ -1,7 +1,7 @@
 # PG3D Art · Weekly Digest
 
 Снимок нагрузки арт-команды из Jira → PNG-дашборд → Slack `#dev_art_leads`.
-Расписание: каждый будний день в 19:00 Ереван (15:00 UTC), через GitHub Actions. Меняется одной строкой cron в `.github/workflows/digest.yml`.
+Расписание: каждый будний день в 18:00 Ереван (14:00 UTC), через GitHub Actions. Меняется одной строкой cron в `.github/workflows/digest.yml`.
 
 ```
 Jira (JQL counts) ──► snapshot.json ──► digest.html ──► digest.png ──► Slack (картинка + текст)
@@ -23,7 +23,7 @@ Jira (JQL counts) ──► snapshot.json ──► digest.html ──► digest
 
 ### 3. GitHub
 Положить репозиторий, в Settings → Secrets and variables → Actions добавить три секрета из п.1–2.
-Workflow `.github/workflows/digest.yml` уже содержит cron `0 15 * * 1-5` и ручной запуск (Run workflow → галка `dry_run`, чтобы только отрендерить без поста).
+Workflow `.github/workflows/digest.yml` уже содержит cron `0 14 * * 1-5` и ручной запуск (Run workflow → галка `dry_run`, чтобы только отрендерить без поста).
 
 ## Локальный запуск
 
