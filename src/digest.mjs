@@ -55,8 +55,8 @@ async function main() {
       const pngPath = resolve(outDir, `pg3d-art-digest-${day}${suffix}.png`);
       await renderPng(p.html, pngPath);
       const title = p.total > 1
-        ? `PG3D Art · снимок нагрузки · ${snap.dateLabel} · ${p.index + 1}/${p.total}`
-        : `PG3D Art · снимок нагрузки · ${snap.dateLabel}`;
+        ? `PG3D Art · нагрузка на конец дня · ${snap.dateLabel} · ${p.index + 1}/${p.total}`
+        : `PG3D Art · нагрузка на конец дня · ${snap.dateLabel}`;
       files.push({ path: pngPath, title });
       log('png written', pngPath);
     }

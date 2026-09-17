@@ -2,8 +2,8 @@ name: PG3D Art digest
 
 on:
   schedule:
-    # Mon + Wed 09:30 Yerevan (UTC+4, no DST) = 05:30 UTC
-    - cron: '30 5 * * 1,3'
+    # Every weekday 19:00 Yerevan (UTC+4, no DST) = 15:00 UTC
+    - cron: '0 15 * * 1-5'
   workflow_dispatch:
     inputs:
       dry_run:

@@ -144,9 +144,9 @@ export function buildSnapshot(config, raw, now = new Date()) {
   return {
     generatedAt: now.toISOString(),
     dateLabel,
-    title: 'Недельный снимок нагрузки',
+    title: 'Снимок нагрузки на конец дня',
     subtitle: 'PG3D Art · проекты PROD + CON, статусы «К выполнению» / «В работе» / «Отзыв»',
-    badge: `Снимок на реальных данных Jira · ${dateLabel}`,
+    badge: `Данные Jira на конец дня · ${dateLabel}`,
     hero: { number: top.count, label: 'Самая большая очередь открытых задач', detail: heroDetail, status: top.status },
     sections,
     capacity: config.capacity,
@@ -161,7 +161,7 @@ export function buildSnapshot(config, raw, now = new Date()) {
 
 /** Caption under the image: header + warning flags only, all numbers live on the picture. */
 export function slackCaption(snap) {
-  const lines = [`*PG3D Art · снимок нагрузки · ${snap.dateLabel}*`, ''];
+  const lines = [`*PG3D Art · нагрузка на конец дня · ${snap.dateLabel}*`, ''];
   const flags = snap.sections.flatMap((s) => s.flags).filter((f) => f.slack !== false);
   if (flags.length === 0) lines.push('Без предупреждений, подробности на картинке.');
   else lines.push('ОБРАТИТЬ ВНИМАНИЕ');
