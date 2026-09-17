@@ -130,7 +130,18 @@ function capacityHtml(cap) {
   </section>`;
 }
 
-export function renderHtml(snap) {
+/**
+ * Renders one page. `page` = { sections: [ids], hero?, capacity?, footnote? } from config.pages;
+ * omitted -> everything on a single page. `index`/`total` add "1/2" to the badge when total > 1.
+ */
+export function renderHtml(snap, page = null, index = 0, total = 1) {
+  const all = !page;
+  const sections = all ? snap.sections : snap.sections.filter((s) => page.sections.includes(s.id));
+  const showHero = all || page.hero;
+  const showCapacity = all || page.capacity;
+  const showFootnote = all || page.footnote;
+  const badge = total > 1 ? `${snap.badge} · ${index + 1}/${total}` : snap.badge;
+
   return `<!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
@@ -143,26 +154,34 @@ export function renderHtml(snap) {
 </head>
 <body>
 <div class="wrap">
-  <span class="badge">${esc(snap.badge)}</span>
+  <span class="badge">${esc(badge)}</span>
   <h1>${esc(snap.title)}</h1>
   <p class="dates">${esc(snap.subtitle)}</p>
 
+  ${showHero ? `
   <div class="hero">
     <div class="hero-num ${esc(snap.hero.status)}">${snap.hero.number}</div>
     <div class="hero-text">
       <div class="label">${esc(snap.hero.label)}</div>
       <div class="detail">${esc(snap.hero.detail)}</div>
     </div>
-  </div>
+  </div>` : ''}
 
-  ${snap.sections.map(sectionHtml).join('\n')}
-  ${capacityHtml(snap.capacity)}
+  ${sections.map(sectionHtml).join('\n')}
+  ${showCapacity ? capacityHtml(snap.capacity) : ''}
 
+  ${showFootnote ? `
   <div class="footnote">
     <strong>Что здесь реальное, а что ручное:</strong>
     <ul>${snap.footnote.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
-  </div>
+  </div>` : ''}
 </div>
 </body>
 </html>`;
+}
+
+/** All pages for the snapshot as [{ html, index, total }]. */
+export function renderPages(snap, pages) {
+  if (!pages || pages.length === 0) return [{ html: renderHtml(snap), index: 0, total: 1 }];
+  return pages.map((p, i) => ({ html: renderHtml(snap, p, i, pages.length), index: i, total: pages.length }));
 }

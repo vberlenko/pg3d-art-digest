@@ -6,7 +6,7 @@
 <body>
 <script type="module">
   import { buildSnapshot } from '../src/model.mjs';
-  import { renderHtml } from '../src/render.mjs';
+  import { renderHtml, renderPages } from '../src/render.mjs';
   import { makeSampleJira } from '../src/jira.mjs';
   import { collect } from '../src/collect.mjs';
 
@@ -17,7 +17,10 @@
   const raw = await collect(config, makeSampleJira(sample));
   const snap = buildSnapshot(config, raw, new Date());
   window.__snapshot = snap;
-  document.open(); document.write(renderHtml(snap)); document.close();
+  // ?page=1 / ?page=2 -> that page from config.pages; no param -> everything on one page
+  const q = new URLSearchParams(location.search).get('page');
+  const html = q ? renderPages(snap, config.pages)[Number(q) - 1].html : renderHtml(snap);
+  document.open(); document.write(html); document.close();
 </script>
 </body>
 </html>

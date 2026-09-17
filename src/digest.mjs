@@ -13,8 +13,8 @@ import { fileURLToPath } from 'node:url';
 import { makeJira, makeSampleJira } from './jira.mjs';
 import { collect } from './collect.mjs';
 import { buildSnapshot, slackText, slackCaption } from './model.mjs';
-import { renderHtml } from './render.mjs';
-import { uploadFile, postMessage } from './slack.mjs';
+import { renderPages } from './render.mjs';
+import { uploadFiles, postMessage } from './slack.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = new Set(process.argv.slice(2));
@@ -44,16 +44,23 @@ async function main() {
   const caption = slackCaption(snap);  // short version under the image
   await writeFile(resolve(outDir, 'slack.txt'), caption + '\n\n--- fallback ---\n' + text);
 
-  // 3. Render
-  const html = renderHtml(snap);
-  const htmlPath = resolve(outDir, 'digest.html');
-  await writeFile(htmlPath, html);
-  let pngPath = null;
-  if (!NO_PNG) {
-    const { renderPng } = await import('./png.mjs');
-    pngPath = resolve(outDir, `pg3d-art-digest-${snap.generatedAt.slice(0, 10)}.png`);
-    await renderPng(html, pngPath);
-    log('png written', pngPath);
+  // 3. Render: one PNG per page from config.pages (or a single page when not configured)
+  const pages = renderPages(snap, config.pages);
+  const day = snap.generatedAt.slice(0, 10);
+  const files = []; // [{ path, title }]
+  const renderPng = NO_PNG ? null : (await import('./png.mjs')).renderPng;
+  for (const p of pages) {
+    const suffix = p.total > 1 ? `-${p.index + 1}` : '';
+    await writeFile(resolve(outDir, `digest${suffix}.html`), p.html);
+    if (renderPng) {
+      const pngPath = resolve(outDir, `pg3d-art-digest-${day}${suffix}.png`);
+      await renderPng(p.html, pngPath);
+      const title = p.total > 1
+        ? `PG3D Art · снимок нагрузки · ${snap.dateLabel} · ${p.index + 1}/${p.total}`
+        : `PG3D Art · снимок нагрузки · ${snap.dateLabel}`;
+      files.push({ path: pngPath, title });
+      log('png written', pngPath);
+    }
   }
 
   // 4. Post
@@ -65,10 +72,10 @@ async function main() {
   if (!token) throw new Error('SLACK_BOT_TOKEN is not set');
   const channelId = process.env.SLACK_CHANNEL_ID || config.slack.channelId;
 
-  if (pngPath) {
+  if (files.length) {
     try {
-      const f = await uploadFile({ token, channelId, filePath: pngPath, title: `PG3D Art · снимок нагрузки · ${snap.dateLabel}`, comment: caption });
-      log('posted image to', channelId, f?.id || '');
+      const posted = await uploadFiles({ token, channelId, files, comment: caption });
+      log(`posted ${posted.length} image(s) to`, channelId, posted.map((f) => f.id).join(','));
       return;
     } catch (e) {
       console.error('image upload failed, falling back to text:', e.message);

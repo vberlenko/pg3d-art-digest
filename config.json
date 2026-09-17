@@ -10,6 +10,12 @@
   "timezone": "Asia/Yerevan",
   "staleDays": 60,
 
+  "_comment_pages": "Картинки для Slack. Каждая страница = отдельный PNG, все уходят одним сообщением. hero/capacity/footnote — что ещё показать на странице.",
+  "pages": [
+    { "sections": ["narrow"], "hero": true },
+    { "sections": ["3d", "unassigned"], "capacity": true, "footnote": true }
+  ],
+
   "_comment_status_ids": "PROD: 10088 = К выполнению, 10181 = В работе. CON: 10028 = К выполнению, 10029 = В работе, 10250 = Отзыв. Не переносить ID между проектами.",
 
   "defaults": {
