@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeJira, makeSampleJira } from './jira.mjs';
 import { collect } from './collect.mjs';
-import { buildSnapshot, slackText, slackCaption } from './model.mjs';
+import { buildSnapshot, slackCaption } from './model.mjs';
 import { renderPages } from './render.mjs';
 import { uploadFiles, postMessage } from './slack.mjs';
 
@@ -40,9 +40,8 @@ async function main() {
   // 2. Model
   const snap = buildSnapshot(config, raw, new Date());
   await writeFile(resolve(outDir, 'snapshot.json'), JSON.stringify(snap, null, 2));
-  const text = slackText(snap);        // full version, text-only fallback
-  const caption = slackCaption(snap);  // short version under the image
-  await writeFile(resolve(outDir, 'slack.txt'), caption + '\n\n--- fallback ---\n' + text);
+  const caption = slackCaption(snap);  // message text under the images
+  await writeFile(resolve(outDir, 'slack.txt'), caption);
 
   // 3. Render: one PNG per page from config.pages (or a single page when not configured)
   const pages = renderPages(snap, config.pages);
@@ -78,10 +77,11 @@ async function main() {
       log(`posted ${posted.length} image(s) to`, channelId, posted.map((f) => f.id).join(','));
       return;
     } catch (e) {
-      console.error('image upload failed, falling back to text:', e.message);
+      console.error('image upload failed, posting caption only:', e.message);
     }
   }
-  await postMessage({ token, channelId, text });
+  // No images (upload failed or --no-png): same caption plus one line about the missing picture.
+  await postMessage({ token, channelId, text: caption + '\n\n_Картинка не загрузилась, подробности в логе запуска GitHub Actions._' });
   log('posted text to', channelId);
 }
 

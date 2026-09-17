@@ -172,20 +172,3 @@ export function slackCaption(snap) {
   }
   return lines.join('\n');
 }
-
-/** Full text version: used only as the fallback when the image upload fails. */
-export function slackText(snap) {
-  const b = snap.byId;
-  const n = (id) => b[id]?.count ?? '—';
-  const lines = [
-    `*PG3D Art · снимок нагрузки · ${snap.dateLabel}*`,
-    `Самая большая очередь: ${snap.hero.detail}`,
-    `• 2D Пелогеина — *${n('2d')}* · VFX Терентьев — *${n('vfx')}* · Sound Ковалёв — *${n('sound')}*`,
-    `• Concept: Трушников *${n('concept-lead')}*${b['concept-lead']?.meta ? ` (${b['concept-lead'].meta})` : ''} · Соколова *${n('concept-artist')}*`,
-    `• 3D: команда *${n('3d-team')}* — Тишин ${n('3d-lead')} · Жапаров ${n('3d-zhaparov')} · Агафонов ${n('3d-agafonov')} · Загинайло ${n('3d-zaginailo')}`,
-    `• Очередь art (нераспределённые): *${n('art-queue')}*`,
-  ];
-  const flags = snap.sections.flatMap((s) => s.flags);
-  for (const f of flags) lines.push(`${f.kind === 'warn' ? '⚠' : 'ⓘ'} ${f.text}`);
-  return lines.join('\n');
-}

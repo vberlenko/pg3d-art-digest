@@ -73,7 +73,7 @@ run-with-secrets --names=JIRA_EMAIL,JIRA_API_TOKEN,SLACK_BOT_TOKEN -- node src/d
 - Concept живёт в проекте `CON`, а не `PROD`.
 - У Соколовой 0 задач — реальная цифра, не ошибка запроса.
 - На 17.09.2026 у 2D 0 задач старше 60 дней: самая старая открытая создана 20.07.2026, старый беклог 2025 года разобран. Флаг заработает, как только появятся задачи старше порога.
-- `files.upload` в Slack deprecated — используется `files.getUploadURLExternal` → POST байтов → `files.completeUploadExternal`. Если картинка не загрузилась, скрипт постит текстовую версию, чтобы дайджест не пропал.
+- `files.upload` в Slack deprecated — используется `files.getUploadURLExternal` → POST байтов → `files.completeUploadExternal`. Если картинки не загрузились, скрипт постит ту же подпись плюс строку о сбое, чтобы дайджест не пропал молча.
 - Счётчики берутся через `POST /rest/api/3/search/approximate-count` (старый `/search` с `total` отключён в Jira Cloud). На выборках в десятки задач он точный.
 
 ## Что ещё не сделано
