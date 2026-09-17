@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeJira, makeSampleJira } from './jira.mjs';
 import { collect } from './collect.mjs';
-import { buildSnapshot, slackText } from './model.mjs';
+import { buildSnapshot, slackText, slackCaption } from './model.mjs';
 import { renderHtml } from './render.mjs';
 import { uploadFile, postMessage } from './slack.mjs';
 
@@ -40,8 +40,9 @@ async function main() {
   // 2. Model
   const snap = buildSnapshot(config, raw, new Date());
   await writeFile(resolve(outDir, 'snapshot.json'), JSON.stringify(snap, null, 2));
-  const text = slackText(snap);
-  await writeFile(resolve(outDir, 'slack.txt'), text);
+  const text = slackText(snap);        // full version, text-only fallback
+  const caption = slackCaption(snap);  // short version under the image
+  await writeFile(resolve(outDir, 'slack.txt'), caption + '\n\n--- fallback ---\n' + text);
 
   // 3. Render
   const html = renderHtml(snap);
@@ -57,7 +58,7 @@ async function main() {
 
   // 4. Post
   if (DRY) {
-    log('dry run: not posting. Slack text would be:\n' + text);
+    log('dry run: not posting. Slack caption would be:\n' + caption);
     return;
   }
   const token = process.env.SLACK_BOT_TOKEN;
@@ -66,7 +67,7 @@ async function main() {
 
   if (pngPath) {
     try {
-      const f = await uploadFile({ token, channelId, filePath: pngPath, title: `PG3D Art · снимок нагрузки · ${snap.dateLabel}`, comment: text });
+      const f = await uploadFile({ token, channelId, filePath: pngPath, title: `PG3D Art · снимок нагрузки · ${snap.dateLabel}`, comment: caption });
       log('posted image to', channelId, f?.id || '');
       return;
     } catch (e) {

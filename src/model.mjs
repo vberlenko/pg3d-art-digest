@@ -79,22 +79,27 @@ export function buildSnapshot(config, raw, now = new Date()) {
       if (r.divider || r.status === 'aggregate') continue;
       const who = r.shortName || r.person;
       // Wording avoids Russian case endings on surnames (nominative only).
+      // `text` goes on the image, `short` is the one-liner for the Slack caption (slack: false = image only).
       if (r.status === 'overload') {
+        const limit = r.thresholds?.overload ?? d.thresholds.overload;
         flags.push({
           kind: 'warn',
-          text: `${who}: ${tasks(r.count)} в открытых статусах — выше порога ${r.thresholds?.overload ?? d.thresholds.overload}.`,
+          text: `${who}: ${tasks(r.count)} в открытых статусах — выше порога ${limit}.`,
+          short: `${who}: ${tasks(r.count)} в открытых статусах, выше порога ${limit}.`,
         });
       }
       if (typeof r.stale === 'number' && r.stale > 0) {
         flags.push({
           kind: 'warn',
           text: `${who}: ${r.stale} из ${r.count} открытых задач созданы больше ${config.staleDays} дней назад — похоже на залежавшийся беклог, а не активную нагрузку.`,
+          short: `${who}: ${r.stale} из ${r.count} задач старше ${config.staleDays} дней.`,
         });
       }
       if (r.count === 0) {
         flags.push({
           kind: 'info',
           text: `${who}: ноль открытых задач в Jira — либо работа не трекается здесь, либо сейчас реально нет назначенных задач.`,
+          short: `${who}: ноль открытых задач в Jira.`,
         });
       }
       if (r.components) {
@@ -102,6 +107,7 @@ export function buildSnapshot(config, raw, now = new Date()) {
         flags.push({
           kind: 'info',
           text: `По компонентам: ${top.map(([k, v]) => `${k} — ${v}`).join(', ')} (из ${r.count}).`,
+          slack: false,
         });
       }
     }
@@ -115,6 +121,7 @@ export function buildSnapshot(config, raw, now = new Date()) {
         flags.push({
           kind: 'info',
           text: `У лида (${lead.shortName}) открытых задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}). Стоит проверить: это реальная production-нагрузка на лида или задачи, которые пора раскидать на команду.`,
+          short: `${lead.shortName}: у лида задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}).`,
         });
       }
     }
@@ -152,7 +159,16 @@ export function buildSnapshot(config, raw, now = new Date()) {
   };
 }
 
-/** Slack mrkdwn summary (initial_comment under the image, also the text-only fallback). */
+/** Caption under the image: header + warning flags only, all numbers live on the picture. */
+export function slackCaption(snap) {
+  const lines = [`*PG3D Art · снимок нагрузки · ${snap.dateLabel}*`, ''];
+  const flags = snap.sections.flatMap((s) => s.flags).filter((f) => f.slack !== false);
+  if (flags.length === 0) lines.push('Без предупреждений, подробности на картинке.');
+  for (const f of flags) lines.push(`${f.kind === 'warn' ? '⚠' : 'ⓘ'} ${f.short || f.text}`);
+  return lines.join('\n');
+}
+
+/** Full text version: used only as the fallback when the image upload fails. */
 export function slackText(snap) {
   const b = snap.byId;
   const n = (id) => b[id]?.count ?? '—';
