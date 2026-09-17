@@ -164,6 +164,7 @@ export function slackCaption(snap) {
   const lines = [`*PG3D Art · снимок нагрузки · ${snap.dateLabel}*`, ''];
   const flags = snap.sections.flatMap((s) => s.flags).filter((f) => f.slack !== false);
   if (flags.length === 0) lines.push('Без предупреждений, подробности на картинке.');
+  else lines.push('ОБРАТИТЬ ВНИМАНИЕ');
   for (const f of flags) {
     const s = f.short || f.text;
     // "Фамилия: текст" -> "*Фамилия*: текст", no icon prefix
