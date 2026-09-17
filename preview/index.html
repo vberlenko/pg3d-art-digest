@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- Dev preview: renders the digest from sample/counts.json in the browser, no Node needed.
+     Serve the project root over HTTP (ES modules don't load from file://), then open /preview/. -->
+<html lang="ru">
+<head><meta charset="UTF-8"><title>digest preview</title></head>
+<body>
+<script type="module">
+  import { buildSnapshot } from '../src/model.mjs';
+  import { renderHtml } from '../src/render.mjs';
+  import { makeSampleJira } from '../src/jira.mjs';
+  import { collect } from '../src/collect.mjs';
+
+  const [config, sample] = await Promise.all([
+    fetch('../config.json').then((r) => r.json()),
+    fetch('../sample/counts.json').then((r) => r.json()),
+  ]);
+  const raw = await collect(config, makeSampleJira(sample));
+  const snap = buildSnapshot(config, raw, new Date());
+  window.__snapshot = snap;
+  document.open(); document.write(renderHtml(snap)); document.close();
+</script>
+</body>
+</html>

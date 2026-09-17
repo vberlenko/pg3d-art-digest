@@ -1,0 +1,158 @@
+{
+  "jira": {
+    "baseUrl": "https://cubicgamesstudio.atlassian.net",
+    "cloudId": "6c6deabe-0d3c-48fe-ae46-b8a6db2b55b7"
+  },
+  "slack": {
+    "channelId": "C0320LB2EF3",
+    "channelName": "#dev_art_leads"
+  },
+  "timezone": "Asia/Yerevan",
+  "staleDays": 60,
+
+  "_comment_status_ids": "PROD: 10088 = К выполнению, 10181 = В работе. CON: 10028 = К выполнению, 10029 = В работе, 10250 = Отзыв. Не переносить ID между проектами.",
+
+  "defaults": {
+    "thresholds": { "watch": 20, "overload": 40 },
+    "scale": 70
+  },
+
+  "sections": [
+    {
+      "id": "narrow",
+      "title": "Загрузка по узким направлениям",
+      "note": "2D, VFX, Concept и Sound — направления с одним специалистом (или лид + один художник). Concept читается из отдельного проекта CON — там свой набор статусов, включая «Отзыв» (Review), которую здесь считаем открытой/активной задачей.",
+      "rows": [
+        {
+          "id": "2d",
+          "label": "2D",
+          "person": "Vera Pelogeina",
+          "shortName": "Пелогеина",
+          "jql": "project = PROD AND assignee = \"5e552839ab90210c8de22def\" AND status in (10088, 10181)",
+          "staleJql": "project = PROD AND assignee = \"5e552839ab90210c8de22def\" AND status in (10088, 10181) AND created <= \"-{staleDays}d\"",
+          "thresholds": { "watch": 25, "overload": 40 }
+        },
+        {
+          "id": "vfx",
+          "label": "VFX",
+          "person": "Grigoriy Terentev",
+          "shortName": "Терентьев",
+          "jql": "project = PROD AND assignee = \"712020:c140e53b-2431-48cb-9e8d-6f757fdfcbff\" AND status in (10088, 10181)"
+        },
+        {
+          "id": "concept",
+          "label": "Concept — overview",
+          "person": "Trushnikov + Sokolova",
+          "aggregateOf": ["concept-lead", "concept-artist"]
+        },
+        {
+          "id": "concept-lead",
+          "sub": true,
+          "label": "Concept Art Lead",
+          "person": "Konstantin Trushnikov",
+          "shortName": "Трушников",
+          "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND statusCategory != Done",
+          "breakdown": [
+            { "label": "К вып.", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10028" },
+            { "label": "В раб.", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10029" },
+            { "label": "Отзыв", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10250" }
+          ],
+          "thresholds": { "watch": 10, "overload": 25 }
+        },
+        {
+          "id": "concept-artist",
+          "sub": true,
+          "label": "Concept Artist",
+          "person": "Taisiia Sokolova",
+          "shortName": "Соколова",
+          "jql": "project = CON AND assignee = \"712020:de4adf7e-74fc-4011-b874-fb5c1045a0e8\" AND statusCategory != Done"
+        },
+        { "divider": true },
+        {
+          "id": "sound",
+          "label": "Sound",
+          "person": "Dmitrii Kovalev",
+          "shortName": "Ковалёв",
+          "jql": "project = PROD AND assignee = \"712020:667a0865-950b-4ad4-932e-b6213d4ff568\" AND status in (10088, 10181)"
+        }
+      ]
+    },
+    {
+      "id": "3d",
+      "title": "Загрузка 3D-команды",
+      "note": "4 человека — не single-resource направление, поэтому сначала агрегат, ниже разбивка по каждому.",
+      "rows": [
+        {
+          "id": "3d-team",
+          "label": "3D — команда",
+          "person": "4 человека",
+          "aggregateOf": ["3d-lead", "3d-zhaparov", "3d-agafonov", "3d-zaginailo"],
+          "scale": 45
+        },
+        { "divider": true },
+        {
+          "id": "3d-lead",
+          "sub": true,
+          "label": "3D Lead",
+          "person": "Aleksandr Tishin",
+          "shortName": "Тишин",
+          "jql": "project = PROD AND assignee = \"5d4d6b24cca0cf0c56be456f\" AND status in (10088, 10181)",
+          "thresholds": { "watch": 10, "overload": 25 },
+          "scale": 20
+        },
+        {
+          "id": "3d-zhaparov",
+          "sub": true,
+          "label": "Senior 3D",
+          "person": "Aslan Zhaparov",
+          "shortName": "Жапаров",
+          "jql": "project = PROD AND assignee = \"712020:55a830c3-6a17-438b-b5b5-ed8cd9abc5d1\" AND status in (10088, 10181)",
+          "scale": 20
+        },
+        {
+          "id": "3d-agafonov",
+          "sub": true,
+          "label": "Senior 3D",
+          "person": "Igor Agafonov",
+          "shortName": "Агафонов",
+          "jql": "project = PROD AND assignee = \"5f27c467fa591d0015d0466a\" AND status in (10088, 10181)",
+          "scale": 20
+        },
+        {
+          "id": "3d-zaginailo",
+          "sub": true,
+          "label": "Senior 3D",
+          "person": "Maksim Zaginailo",
+          "shortName": "Загинайло",
+          "jql": "project = PROD AND assignee = \"5d970a0636d2520dde7ef0bc\" AND status in (10088, 10181)",
+          "scale": 20
+        }
+      ]
+    },
+    {
+      "id": "unassigned",
+      "title": "Нераспределённые задачи",
+      "note": "Задачи в PROD, назначенные на служебный аккаунт «art» (art.pg3d@cubicgames.com) — то есть ещё не переданные конкретному человеку.",
+      "rows": [
+        {
+          "id": "art-queue",
+          "label": "Очередь art",
+          "person": "не назначено на человека",
+          "jql": "project = PROD AND assignee = \"712020:b4669abb-a66b-43ae-b974-75b7192217b9\" AND statusCategory != Done",
+          "componentBreakdown": true,
+          "thresholds": { "watch": 30, "overload": 80 },
+          "scale": 50
+        }
+      ]
+    }
+  ],
+
+  "capacity": {
+    "title": "Capacity лидов",
+    "note": "Ручной ввод (не из worklogs). Production vs review/coordination + фидбек по входящему контенту. Меняется в config.json → capacity.leads.",
+    "leads": [
+      { "name": "Александр Тишин", "role": "3D Lead", "production": 53, "review": 40, "feedback": 7, "feedbackHours": 3 },
+      { "name": "Константин Трушников", "role": "Concept Art Lead", "production": 37, "review": 56, "feedback": 7, "feedbackHours": 3 }
+    ]
+  }
+}

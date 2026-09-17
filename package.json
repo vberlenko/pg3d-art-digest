@@ -1,0 +1,17 @@
+{
+  "name": "pg3d-art-digest",
+  "version": "1.0.0",
+  "description": "PG3D Art weekly workload snapshot: Jira -> PNG dashboard -> Slack #dev_art_leads",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "digest": "node src/digest.mjs",
+    "dry-run": "node src/digest.mjs --dry-run",
+    "render-sample": "node src/digest.mjs --sample --dry-run",
+    "postinstall-browsers": "playwright install --with-deps chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.47.0"
+  }
+}
