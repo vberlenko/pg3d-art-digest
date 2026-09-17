@@ -24,10 +24,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 22
 
-      - run: npm ci
+      # no lockfile in the repo yet -> npm install instead of npm ci
+      - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
 
       - name: Build and post digest

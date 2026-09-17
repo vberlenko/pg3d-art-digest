@@ -28,7 +28,7 @@ Workflow `.github/workflows/digest.yml` уже содержит cron `30 5 * * 1
 ## Локальный запуск
 
 ```bash
-npm ci
+npm install
 npx playwright install --with-deps chromium
 ```
 
