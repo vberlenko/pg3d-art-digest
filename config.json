@@ -20,7 +20,9 @@
 
   "defaults": {
     "thresholds": { "watch": 20, "overload": 40 },
-    "scale": 70
+    "scale": 70,
+    "_comment_inProgress": "Статус «В работе» по проекту; проект определяется из JQL строки (project = X). Считается для каждой строки как второе число.",
+    "inProgressStatusByProject": { "PROD": "10181", "CON": "10029" }
   },
 
   "sections": [
@@ -58,11 +60,6 @@
           "person": "Konstantin Trushnikov",
           "shortName": "Трушников",
           "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND statusCategory != Done",
-          "breakdown": [
-            { "label": "К вып.", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10028" },
-            { "label": "В раб.", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10029" },
-            { "label": "Отзыв", "jql": "project = CON AND assignee = \"613742d4ee2fd0006ac001d1\" AND status = 10250" }
-          ],
           "thresholds": { "watch": 10, "overload": 25 }
         },
         {

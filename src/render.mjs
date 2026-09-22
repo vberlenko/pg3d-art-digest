@@ -29,7 +29,7 @@ const CSS = `
   .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
   h2 { font-family: "Fraunces", Georgia, serif; font-weight: 500; font-size: 21px; margin: 0; }
   .section-note { color: var(--muted); font-size: 13.5px; margin: 0 0 20px; max-width: 580px; }
-  .row { display: grid; grid-template-columns: 170px 1fr 215px; gap: 16px; align-items: center; padding: 14px 0 14px 14px; border-left: 3px solid var(--border); border-bottom: 1px solid var(--border); }
+  .row { display: grid; grid-template-columns: 160px 1fr 250px; gap: 16px; align-items: center; padding: 14px 0 14px 14px; border-left: 3px solid var(--border); border-bottom: 1px solid var(--border); }
   .row.status-overload { border-left-color: var(--red); }
   .row.status-watch { border-left-color: var(--amber); }
   .row.status-stable { border-left-color: var(--teal); }
@@ -38,6 +38,8 @@ const CSS = `
   .row .who .disc { display:block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
   .track { position: relative; height: 8px; background: var(--track); border-radius: 2px; overflow: hidden; }
   .fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 2px; }
+  .fill.open { opacity: 0.35; }            /* all open tasks: light */
+  .fill.progress { opacity: 1; }           /* in progress: solid, drawn on top */
   .status-overload .fill { background: var(--red); }
   .status-watch .fill { background: var(--amber); }
   .status-stable .fill { background: var(--teal); }
@@ -48,7 +50,12 @@ const CSS = `
   .flag.info { color: var(--muted); }
   .row.aggregate { border-left: 3px solid var(--text); font-weight: 500; }
   .row.aggregate .who { font-weight: 500; }
-  .row.aggregate .fill { background: var(--text); opacity: 0.55; }
+  .row.aggregate .fill { background: var(--text); }
+  .row.aggregate .fill.open { opacity: 0.25; }
+  .row.aggregate .fill.progress { opacity: 0.7; }
+  .legend .two { width: 22px; height: 10px; display: inline-flex; border-radius: 2px; overflow: hidden; }
+  .legend .two b { flex: 1; background: var(--muted); }
+  .legend .two b + b { opacity: 0.35; }
   .row.sub { margin-left: 22px; padding-left: 10px; }
   .section-divider { border: none; border-top: 1px dashed var(--border); margin: 4px 0 20px; }
   .cap-row { padding: 16px 0; border-bottom: 1px solid var(--border); }
@@ -77,7 +84,7 @@ function rowHtml(r) {
   return `
     <div class="${cls}">
       <div class="who">${esc(r.label)}<span class="disc">${esc(r.person)}</span></div>
-      <div class="track"><div class="fill" style="width:${r.width}%"></div></div>
+      <div class="track"><div class="fill open" style="width:${r.width}%"></div><div class="fill progress" style="width:${r.widthProgress || 0}%"></div></div>
       <div class="row-meta"><strong>${r.count}</strong> open${meta}</div>
     </div>`;
 }
@@ -92,6 +99,7 @@ const STATUS_LEGEND = `
       <span><i style="background:var(--amber)"></i>стоит присмотреть</span>
       <span><i style="background:var(--red)"></i>превышен порог</span>
       <span><i style="background:var(--border)"></i>нет задач</span>
+      <span><i class="two"><b></b><b></b></i>насыщенная часть — в работе</span>
     </div>`;
 
 function sectionHtml(s) {

@@ -9,14 +9,30 @@ function fillStale(jql, staleDays) {
   return jql.replaceAll('{staleDays}', String(staleDays));
 }
 
+/** "project = PROD AND ..." -> "PROD" */
+export function projectOf(jql) {
+  const m = /project\s*=\s*"?([A-Za-z0-9_]+)"?/.exec(jql);
+  return m ? m[1] : null;
+}
+
+/** JQL for the "in progress" subset of a row, using the project-specific status id. */
+export function inProgressJql(row, config) {
+  const byProject = config.defaults?.inProgressStatusByProject || {};
+  const id = row.inProgressStatus || byProject[projectOf(row.jql)];
+  return id ? `${row.jql} AND status = ${id}` : null;
+}
+
 export async function collect(config, jira) {
-  const raw = { counts: {}, stale: {}, breakdown: {}, components: {} };
+  const raw = { counts: {}, inProgress: {}, stale: {}, breakdown: {}, components: {} };
   const jobs = [];
 
   for (const row of allRows(config)) {
     if (!row.jql) continue; // aggregates are computed in model.mjs
 
     jobs.push(jira.count(row.jql).then((n) => (raw.counts[row.id] = n)));
+
+    const ipJql = inProgressJql(row, config);
+    if (ipJql) jobs.push(jira.count(ipJql).then((n) => (raw.inProgress[row.id] = n)));
 
     if (row.staleJql) {
       const jql = fillStale(row.staleJql, config.staleDays);

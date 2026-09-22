@@ -35,14 +35,18 @@ export function buildSnapshot(config, raw, now = new Date()) {
       const count = raw.counts[row.id];
       if (typeof count !== 'number') throw new Error(`no count collected for row ${row.id}`);
       const thresholds = { ...d.thresholds, ...(row.thresholds || {}) };
+      const scale = row.scale || d.scale;
+      const inProgress = raw.inProgress[row.id];
       byId[row.id] = {
         ...row,
         count,
+        inProgress: typeof inProgress === 'number' ? inProgress : null,
         stale: raw.stale[row.id],
         breakdown: raw.breakdown[row.id],
         components: raw.components[row.id],
         status: statusFor(count, thresholds),
-        width: Math.min(100, Math.round((count / (row.scale || d.scale)) * 100)),
+        width: Math.min(100, Math.round((count / scale) * 100)),
+        widthProgress: Math.min(100, Math.round(((inProgress || 0) / scale) * 100)),
       };
     }
   }
@@ -50,12 +54,17 @@ export function buildSnapshot(config, raw, now = new Date()) {
   for (const section of config.sections) {
     for (const row of section.rows) {
       if (row.divider || !row.aggregateOf) continue;
-      const count = row.aggregateOf.reduce((s, id) => s + byId[id].count, 0);
+      const parts = row.aggregateOf.map((id) => byId[id]);
+      const count = parts.reduce((s, r) => s + r.count, 0);
+      const inProgress = parts.every((r) => r.inProgress !== null) ? parts.reduce((s, r) => s + r.inProgress, 0) : null;
+      const scale = row.scale || d.scale;
       byId[row.id] = {
         ...row,
         count,
+        inProgress,
         status: 'aggregate',
-        width: Math.min(100, Math.round((count / (row.scale || d.scale)) * 100)),
+        width: Math.min(100, Math.round((count / scale) * 100)),
+        widthProgress: Math.min(100, Math.round(((inProgress || 0) / scale) * 100)),
       };
     }
   }
@@ -63,6 +72,7 @@ export function buildSnapshot(config, raw, now = new Date()) {
   // Meta text (right column) per row
   for (const r of Object.values(byId)) {
     const parts = [];
+    if (r.inProgress !== null && r.inProgress !== undefined) parts.push(`${r.inProgress} в работе`);
     if (r.breakdown) parts.push(r.breakdown.map((b) => `${b.count} ${b.label}`).join(' · '));
     if (typeof r.stale === 'number') {
       parts.push(r.stale > 0 ? `${r.stale} старше ${config.staleDays}д` : `все моложе ${config.staleDays}д`);
@@ -132,10 +142,12 @@ export function buildSnapshot(config, raw, now = new Date()) {
   // Hero: biggest personal queue
   const people = Object.values(byId).filter((r) => r.jql && !r.componentBreakdown);
   const top = people.reduce((a, b) => (b.count > a.count ? b : a));
-  let heroDetail = `${top.label} (${top.person}) — ${tasks(top.count)} в открытых статусах.`;
+  let heroDetail = `${top.label} (${top.person}) — ${tasks(top.count)} в открытых статусах`;
+  if (top.inProgress !== null && top.inProgress !== undefined) heroDetail += `, из них ${top.inProgress} в работе`;
+  heroDetail += '.';
   if (typeof top.stale === 'number') {
     heroDetail += top.stale > 0
-      ? ` Из них ${top.stale} созданы больше ${config.staleDays} дней назад.`
+      ? ` ${top.stale} ${plural(top.stale, 'задача создана', 'задачи созданы', 'задач созданы')} больше ${config.staleDays} дней назад.`
       : ` Все созданы за последние ${config.staleDays} дней.`;
   }
 
