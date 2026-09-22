@@ -25,6 +25,7 @@ function statusFor(count, thresholds) {
 
 export function buildSnapshot(config, raw, now = new Date()) {
   const d = config.defaults;
+  const risks = { idleQueueMin: 3, lowProgressShare: 0.1, wipMax: 4, dryMaxOpen: 2, ...(d.risks || {}) };
   const byId = {};
   const sections = [];
 
@@ -119,10 +120,45 @@ export function buildSnapshot(config, raw, now = new Date()) {
           text: `По компонентам: ${top.map(([k, v]) => `${k} — ${v}`).join(', ')} (из ${r.count}).`,
           slack: false,
         });
+        // Unassigned queue above its watch threshold
+        const watch = r.thresholds?.watch ?? d.thresholds.watch;
+        if (r.count >= watch) {
+          flags.push({
+            kind: 'warn',
+            text: `${r.label}: ${tasks(r.count)} без исполнителя — выше порога ${watch}.`,
+            short: `${r.label}: ${tasks(r.count)} без исполнителя, выше порога ${watch}.`,
+          });
+        }
+        continue; // ratio rules below are for people, not for the unassigned queue
+      }
+
+      // --- Ratio risks: open vs in progress ---
+      if (r.inProgress === null || r.inProgress === undefined) continue;
+      const watch = r.thresholds?.watch ?? d.thresholds.watch;
+      if (r.count >= risks.idleQueueMin && r.inProgress === 0) {
+        flags.push({
+          kind: 'warn',
+          text: `${who}: ${tasks(r.count)} в очереди и ни одной в работе — либо ничего не начато, либо статусы не двигаются.`,
+          short: `${who}: ${tasks(r.count)} в очереди, ни одной в работе.`,
+        });
+      } else if (r.count >= watch && r.inProgress / r.count < risks.lowProgressShare) {
+        const pct = Math.round((r.inProgress / r.count) * 100);
+        flags.push({
+          kind: 'warn',
+          text: `${who}: в работе только ${r.inProgress} из ${r.count} (${pct}%) — очередь копится быстрее, чем разбирается.`,
+          short: `${who}: в работе только ${r.inProgress} из ${r.count} (${pct}%), очередь копится.`,
+        });
+      }
+      if (r.inProgress > risks.wipMax) {
+        flags.push({
+          kind: 'warn',
+          text: `${who}: ${r.inProgress} задач одновременно в работе — больше ${risks.wipMax}, есть риск, что ни одна не закрывается.`,
+          short: `${who}: ${r.inProgress} задач одновременно в работе, больше ${risks.wipMax}.`,
+        });
       }
     }
 
-    // Lead-vs-team pattern for 3D
+    // Lead-vs-team pattern for 3D + seniors running dry
     if (section.id === '3d') {
       const lead = byId['3d-lead'];
       const seniors = rows.filter((r) => !r.divider && r.sub && r.id !== '3d-lead');
@@ -132,6 +168,17 @@ export function buildSnapshot(config, raw, now = new Date()) {
           kind: 'info',
           text: `У лида (${lead.shortName}) открытых задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}). Стоит проверить: это реальная production-нагрузка на лида или задачи, которые пора раскидать на команду.`,
           short: `${lead.shortName}: у лида задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}).`,
+        });
+      }
+      const dry = seniors.filter((r) => r.inProgress !== null && r.count > 0 && r.count <= risks.dryMaxOpen && r.inProgress === r.count);
+      if (dry.length) {
+        const names = dry.map((r) => r.shortName || r.person).join(', ');
+        const queue = Object.values(byId).find((r) => r.componentBreakdown);
+        const tail = queue && queue.count > 0 ? ` При этом в очереди art ${tasks(queue.count)} без исполнителя.` : '';
+        flags.push({
+          kind: 'warn',
+          text: `${names}: вся очередь уже в работе, следующих задач нет.${tail}`,
+          short: `${names}: следующих задач нет, всё уже в работе.${tail}`,
         });
       }
     }

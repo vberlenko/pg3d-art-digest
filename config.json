@@ -22,7 +22,9 @@
     "thresholds": { "watch": 20, "overload": 40 },
     "scale": 70,
     "_comment_inProgress": "Статус «В работе» по проекту; проект определяется из JQL строки (project = X). Считается для каждой строки как второе число.",
-    "inProgressStatusByProject": { "PROD": "10181", "CON": "10029" }
+    "inProgressStatusByProject": { "PROD": "10181", "CON": "10029" },
+    "_comment_risks": "Правила для блока ОБРАТИТЬ ВНИМАНИЕ. idleQueueMin: открытых >= N и 0 в работе -> очередь стоит. lowProgressShare: очередь >= watch и доля в работе < X -> копится. wipMax: в работе > N -> слишком много параллельно. dryMaxOpen: вся очередь уже в работе и она <= N -> следующих задач нет.",
+    "risks": { "idleQueueMin": 3, "lowProgressShare": 0.1, "wipMax": 4, "dryMaxOpen": 2 }
   },
 
   "sections": [
