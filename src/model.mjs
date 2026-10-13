@@ -158,18 +158,9 @@ export function buildSnapshot(config, raw, now = new Date()) {
       }
     }
 
-    // Lead-vs-team pattern for 3D + seniors running dry
+    // Seniors running dry
     if (section.id === '3d') {
-      const lead = byId['3d-lead'];
-      const seniors = rows.filter((r) => !r.divider && r.sub && r.id !== '3d-lead');
-      const seniorSum = seniors.reduce((s, r) => s + r.count, 0);
-      if (lead && lead.count > seniorSum) {
-        flags.push({
-          kind: 'info',
-          text: `У лида (${lead.shortName}) открытых задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}). Стоит проверить: это реальная production-нагрузка на лида или задачи, которые пора раскидать на команду.`,
-          short: `${lead.shortName}: у лида задач больше, чем у всех Senior вместе (${lead.count} vs ${seniorSum}).`,
-        });
-      }
+      const seniors = rows.filter((r) => !r.divider && r.sub);
       const dry = seniors.filter((r) => r.inProgress !== null && r.count > 0 && r.count <= risks.dryMaxOpen && r.inProgress === r.count);
       if (dry.length) {
         const names = dry.map((r) => r.shortName || r.person).join(', ');
@@ -208,11 +199,9 @@ export function buildSnapshot(config, raw, now = new Date()) {
     badge: `Данные Jira на конец дня · ${dateLabel}`,
     hero: { number: top.count, label: 'Самая большая очередь открытых задач', detail: heroDetail, status: top.status },
     sections,
-    capacity: config.capacity,
     footnote: [
       `Все числа — снимок Jira на ${dateLabel} (JQL по PROD + CON). PROD: «К выполнению»/«В работе»; CON: всё, что не Done, включая «Отзыв».`,
       `Порог «старой» задачи — ${config.staleDays} дней от создания (пока считается только для 2D).`,
-      'Capacity лидов — ручной ввод из config.json, не связан с worklogs.',
     ],
     byId,
   };
